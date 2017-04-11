@@ -21,21 +21,27 @@ class AbstractClient:
         self.connection = http.client.HTTPSConnection(self.API_URL)
 
     
-    def get_updates(offset=None):
+    def _get_updates(offset=None):
 
         req_url = self.LONG_POLL
         
         if offset is not None:
-            req_url = get_url + "&offset=" + str(offset)
+            req_url = req_url + "&offset=" + str(offset)
 
-        self.connection.request("GET", get_url)
+        self.connection.request("GET", req_url)
         response = connection.getresponse()
 
         raw_content = response.read()
 
         content = raw_content.decode("utf8")
 
-        return json.loads(content)['result']
+        json_content = json.loads(content)
+
+        if "result" in json_content:
+            return json_content["result"]
+
+        else:
+            return None
 
 
     def send_message(text, chat_id):
@@ -49,10 +55,10 @@ class AbstractClient:
             max_update_id = -1
 
             if max_update_id < 0:
-                updates = get_updates()
+                updates = _get_updates()
 
             else:
-                updates = get_updates(max_update_id)
+                updates = _get_updates(max_update_id)
 
                 if updates is not None:
                     max_update_id = -1
@@ -66,7 +72,7 @@ class AbstractClient:
                     max_update_id = update_id
 
 
-    def handle_message():
+    def handle_message(message):
         pass
 
 
