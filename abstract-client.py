@@ -18,22 +18,30 @@ class AbstractClient:
         self.LONG_POLL = self.QUERY_BASE + "/getUpdates?timeout=" + str(self.LP_TIMEOUT)
         self.SEND_MESSAGE = self.QUERY_BASE + "/sendMessage"
 
+        self.SEND_HEADERS = {"Content-Type": "application/json"}
+
         self.connection = http.client.HTTPSConnection(self.API_URL)
 
-    
-    def _get_updates(offset=None):
+
+    def _get_updates(self, offset=None):
 
         req_url = self.LONG_POLL
-        
+
         if offset is not None:
             req_url = req_url + "&offset=" + str(offset)
 
         self.connection.request("GET", req_url)
-        response = connection.getresponse()
+        response = self.connection.getresponse()
 
         raw_content = response.read()
 
+        if raw_content is None:
+            return None
+
         content = raw_content.decode("utf8")
+
+        if content is None:
+            return None
 
         json_content = json.loads(content)
 
@@ -44,35 +52,63 @@ class AbstractClient:
             return None
 
 
-    def send_message(text, chat_id):
-        pass
+    def send_message(self, text, chat_id):
+
+        req_url = self.SEND_MESSAGE
+
+        json_content = json.dumps({"chat_id": chat_id, "text": text})
+
+        self.connection.request(
+                "POST",
+                req_url,
+                json_content,
+                self.SEND_HEADERS)
+
+        print(self.connection.getresponse().read())
 
 
-    def start_polling():
+    def start_polling(self):
 
-        while True:
+        max_update_id = -1
 
-            max_update_id = -1
+        try:
+            while True:
 
-            if max_update_id < 0:
-                updates = _get_updates()
+                if max_update_id < 0:
+                    updates = self._get_updates()
 
-            else:
-                updates = _get_updates(max_update_id)
+                else:
+                    updates = self._get_updates(max_update_id + 1)
+
+                    if updates is not None:
+                        max_update_id = -1
 
                 if updates is not None:
-                    max_update_id = -1
 
-            for update in updates:
+                    for update in updates:
 
-                handle(update['message'])
+                        print("UPDATE_ID " + str(update['update_id']))
 
-                update_id = update['update_id'] 
-                if update_id > max_update:
-                    max_update_id = update_id
+                        if update is None or 'message' not in update:
+                            continue
+
+                        self.handle_message(update['message'])
+
+                        update_id = update['update_id']
+                        if update_id > max_update_id:
+                            max_update_id = update_id
+
+        except KeyboardInterrupt:
+            print("\nDetected interrupt from keyboard. Closing...")
+
+        finally:
+            self.connection.close()
 
 
-    def handle_message(message):
-        pass
+    def handle_message(self, message):
+        raise NotImplementedError
 
 
+if __name__ == "__main__":
+    client = Client("BOT TOKEN GOES HERE ;)")
+    client.start_polling()
