@@ -103,8 +103,3 @@ class AbstractClient:
 
     def handle_message(self, message):
         raise NotImplementedError
-
-
-if __name__ == "__main__":
-    client = Client("BOT TOKEN GOES HERE ;)")
-    client.start_polling()
