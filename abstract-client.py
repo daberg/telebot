@@ -33,16 +33,12 @@ class AbstractClient:
         self.connection.request("GET", req_url)
         response = self.connection.getresponse()
 
-        raw_content = response.read()
-
-        if raw_content is None:
-            return None
-
-        content = raw_content.decode("utf8")
+        content = response.read()
 
         if content is None:
             return None
 
+        # The encoding should be utf-8, so we can parse directly with json
         json_content = json.loads(content)
 
         if "result" in json_content:
