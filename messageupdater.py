@@ -1,4 +1,4 @@
-from bot import Bot
+from telebot.bot import Bot
 
 
 class MessageUpdater:
