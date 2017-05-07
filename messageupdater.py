@@ -58,6 +58,4 @@ class MessageUpdater:
             if self.VERBOSE:
                 print()
                 print("Detected interrupt from keyboard. Closing...")
-
-    def stop_polling(self):
-        self.bot.disconnect()
+            self.bot.disconnect()
